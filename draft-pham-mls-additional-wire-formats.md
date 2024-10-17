@@ -66,9 +66,9 @@ This document describes an extension to support two new wire formats for MLS mes
 # Introduction
 Sometimes it is desirable to have additional authenticated data to be included in the computation of `MLSMessage` constructions, but not to have it sent on the wire as part of these messages. A use-case is applications that want to have some information available to the server together with a `MLSMessage` and at the same time want to prove the authenticity of the information to other clients. 
 
-An example of this is the case of delivery receipts where the server needs to know that a message from Alice has been delivered to Bob, but at the same time it wants Bob to be able to verify that the delivery receipt indeed comes from Bob.
+An example of this is the case of delivery receipts where the server needs to know that a message from Alice has been delivered to Bob, but at the same time it wants Alice to be able to verify that the delivery receipt indeed comes from Bob.
 
-This document proposes an extension to support new wire formats for MLS `PrivateMessage` and `PublicMessage` to support such cases. Applications will supply in additional data as part of the `MLSMessage` computation, but the additional data is not included in the wire format of the `MLSMessage`.
+This document proposes an extension to support new wire formats for MLS `PrivateMessage` and `PublicMessage` to support such cases. Applications will supply in additional data as part of the `MLSMessage` computation, but the additional data is not included in the `MLSMessage`.
 
 # Extension Definition
 ```
@@ -208,9 +208,9 @@ The actual message content is encrypted using the key derived as follows:
 
 ```
 DeriveExtensionSecret(Secret, Label) =
-  ExpandWithLabel(extension_secret, "ExtensionExport " + ExtensionType + " " + Label)
+  ExpandWithLabel(epoch_secret, "ExtensionExport " + ExtensionType + " " + Label)
 ```
-with `extension _secret` as defined by in Section 2.1.5 of the Extension Framework.
+as defined by in Section 2.1.5 of the Extension Framework.
 
 - Use the the `secret` in lieu of `encryption_tree` to seed the Secret Tree (Section 9 of RFC 9420). 
 - Follow the procedure of the Secret Tree to generate encryption keys and nonces for the encryption of the message content.
