@@ -66,9 +66,15 @@ This document describes an extension to support two new wire formats for MLS mes
 # Introduction
 Sometimes it is desirable to have additional authenticated data to be included in the computation of `MLSMessage` constructions, but not to have it sent on the wire as part of these messages. A use-case is applications that want to have some information available to the server together with a `MLSMessage` and at the same time want to prove the authenticity of the information to other clients. 
 
-An example of this is the case of delivery receipts where the server needs to know that a message from Alice has been delivered to Bob, but at the same time it wants Bob to be able to verify that the delivery receipt indeed comes from Bob.
+An example of this is the case of delivery receipts where the server needs to know that a message from Alice has been delivered to Bob, but at the same time it wants Bob to be able to verify that the delivery receipt indeed comes from Alice.
 
-This document proposes an extension to support new wire formats for MLS `PrivateMessage` and `PublicMessage` to support such cases. Applications will supply in additional data as part of the `MLSMessage` computation, but the additional data is not included in the wire format of the `MLSMessage`.
+This document proposes an extension to support new wire formats for MLS `PrivateMessage` and `PublicMessage` to support such cases. Applications will inject additional data as part of the `MLSMessage` computation, but the additional data is not included in the wire format of the `MLSMessage`. 
+
+Note that it is the application's responsibility to know what needs to be used as additional data when it processes messages with these new wire formats. 
+
+<!-- TODO: A cautionary paragraph
+
+-->
 
 # Extension Definition
 ```
@@ -102,32 +108,11 @@ struct {
 
 ```
 
-```
-struct {
-    ProtocolVersion version = mls10;
-    WireFormat wire_format;
-    select (MLSMessage.wire_format) {
-        case mls_public_message:
-            PublicMessage public_message;
-        case mls_private_message:
-            PrivateMessage private_message;
-        case mls_welcome:
-            Welcome welcome;
-        case mls_group_info:
-            GroupInfo group_info;
-        case mls_key_package:
-            KeyPackage key_package;
-        
-        // Q: I don't really follow the explanation about this in SafeExtension
-        // what should I put here?
-        case mls_extension_message:
-            ExtensionContent extension_content;        
-    };
-} MLSMessage;
-```
-
 # Content Authentication
-`FramedContentWithoutAAD` is authenticated using the same procedure for `FramedContent` described in Section 6.1 of [RFC9420]. A difference is that in the `FramedContentTBS` definition, we have `FramedContentWithoutAAD` in lieu of `FramedContent`. 
+`FramedContentWithoutAAD` is authenticated using the same procedure for `FramedContent` described in Section 6.1 of [RFC9420]. A difference is that in the `FramedContentTBS` definition, we have `FramedContent` with `authenticated_data` being injected from the outside by the application.
+
+<!--
+A difference is that in the `FramedContentTBS` definition, we have `FramedContentWithoutAAD` in lieu of `FramedContent`. 
 
 ```
 struct {
@@ -145,8 +130,9 @@ struct {
 } FramedContentWithoutAadTBS;
 
 ```
+-->
 
-Moreover, the `signature` in the `FramedContentAuthData` is computed by using SafeExtension 
+Moreover, the `signature` in the `FramedContentAuthData` is computed by using SafeExtension. 
 
 ```
 SignWithLabel(SignatureKey, "LabeledExtensionContent", LabeledExtensionContent)
@@ -155,17 +141,18 @@ where `LabeledExtensionContent` is defined as:
 ```
 label = Label
 extension_type = ExtensionType
-extension_data = FramedContentWithoutAadTBS | AdditionalData
+extension_data = FramedContent
 ```
+with `authenticated_data` being injected to `FramedContent` by the application.
 
-with `AdditionalData` being supplied by the application. 
+<!-- with `AdditionalData` being supplied by the application. -->
 
 # PublicMessageWithoutAAD
 
 ```
 struct {
     FramedContentWithoutAAD content;
-    FramedContentAuthDataWithoutAAD auth;
+    FramedContentAuthData auth;
     select (PublicMessageWithoutAAD.content.sender.sender_type) {
         case member:
             MAC membership_tag;
@@ -180,10 +167,10 @@ struct {
 The membership_tag in the `PublicMessageWithoutAAD` authenticates the sender's membership in the group. It is computed as follows:
 
 ```
-membership_tag = MAC(membership_key, AuthenticatedContentTBM | AdditionalData)
+membership_tag = MAC(membership_key, AuthenticatedContentTBM)
 ```
 
-with `AuthenticatedContentTBM` and `membership_key` as defined as in the [RFC9420]
+with `AuthenticatedContentTBM` and `membership_key` as defined as in the [RFC9420]. `authenticated_data` in the `FramedContent` is injected by the application.
 
 <!-- Q: do we need to have an extension label for `membership_key`? -->
 
