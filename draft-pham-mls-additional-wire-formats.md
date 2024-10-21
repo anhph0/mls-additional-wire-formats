@@ -30,7 +30,7 @@ date:
 consensus: false
 v: 3
 area: AREA
-workgroup: WG Working Group
+workgroup: MLS
 keyword:
  - additional authenticated data
  - AAD
@@ -58,6 +58,11 @@ author:
     fullname: Raphael Robert
     organization: Phoenix R&D
     email: ietf@raphaelrobert.com
+
+ - 
+    fullname: Peter Slatala
+    organization: Google
+    email: psla@google.com
 
 normative:
 
@@ -89,8 +94,7 @@ Note that it is the application's responsibility to know what needs to be used a
     } ExtensionContent;
 
 
-
-`extension_type` ExtensionType is a unique uint16 identifier registered in MLS Extension Types IANA registry (see Section 17.3 of [RFC9420]). This extension uses the `mls_extension_message` WireFormat as defined in [Section 2.1.7.1 of the Extensions draft](https://messaginglayersecurity.rocks/mls-extensions/draft-ietf-mls-extensions.html#wire-formats), where the `extension_data` is TLS-serialized `MessageWithoutAAD`. 
+`extension_type` is a unique uint16 identifier registered in MLS Extension Types IANA registry (see Section 17.3 of {{!RFC9420}}). This extension uses the `mls_extension_message` WireFormat as defined in [Section 2.1.7.1 of the Extensions Framework](https://messaginglayersecurity.rocks/mls-extensions/draft-ietf-mls-extensions.html#wire-formats), where the `extension_data` is TLS-serialized `MessageWithoutAAD`. 
 
 
     enum {
@@ -120,7 +124,7 @@ Note that it is the application's responsibility to know what needs to be used a
 
 
 # Content Authentication
-`FramedContentWithoutAAD` is authenticated using the same procedure for `FramedContent` described in Section 6.1 of [RFC9420]. A difference is that in the `FramedContentTBS` definition, we have `FramedContent` with `authenticated_data` being injected from the outside by the application.
+`FramedContentWithoutAAD` is authenticated using the same procedure for `FramedContent` described in Section 6.1 of {{!RFC9420}}. A difference is that in the `FramedContentTBS` definition, we have `FramedContent` with `authenticated_data` being injected from the outside by the application.
 
 Moreover, the `signature` in the `FramedContentAuthData` is computed by using SafeExtension. 
 
@@ -156,7 +160,7 @@ The membership_tag in the `PublicMessageWithoutAAD` authenticates the sender's m
 
     membership_tag = MAC(membership_key, AuthenticatedContentTBM)
 
-with `AuthenticatedContentTBM` and `membership_key` as defined as in the [RFC9420]. `authenticated_data` in the `FramedContent` is injected by the application.
+with `AuthenticatedContentTBM` and `membership_key` as defined as in the {{!RFC9420}}. `authenticated_data` in the `FramedContent` is injected by the application.
 
 
 # PrivateMessageWithoutAAD
@@ -175,15 +179,13 @@ The `SenderData` is encrypted using the `sender_data_secret` of the group.
 
 The actual message content is encrypted using the key derived as follows:
 
-- Derive a `secret` using:
+- Derive a `secret` as defined in Section 2.1.5 of the [Extensions Framework](https://messaginglayersecurity.rocks/mls-extensions/draft-ietf-mls-extensions.html#name-exporting-secrets):
 
     ```
     DeriveExtensionSecret(Secret, Label) = ExpandWithLabel(epoch_secret, "ExtensionExport " + ExtensionType + " " + Label)
     ```
 
-as defined in Section 2.1.5 of the Extension Framework.
-
-- Use the the `secret` in lieu of `encryption_tree` to seed the Secret Tree (Section 9 of RFC 9420). 
+- Use the the `secret` in lieu of `encryption_tree` to seed the Secret Tree (Section 9 of {{!RFC9420}}). 
 - Follow the procedure of the Secret Tree to generate encryption keys and nonces for the encryption of the message content.
 
 
@@ -203,8 +205,3 @@ This document requests the addition of various new values under the heading of "
 
 
 --- back
-
-# Acknowledgments
-{:numbered="false"}
-
-TODO acknowledge.
