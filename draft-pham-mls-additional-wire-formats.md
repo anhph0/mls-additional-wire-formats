@@ -22,7 +22,7 @@
 #
 ###
 -->
-title: "MLS Wire Formats for PublicMessage and PrivateMessage without Authenticated_data"
+title: "MLS Wire Formats for PublicMessage and PrivateMessage without authenticated_data"
 <!--- abbrev: "TODO - Abbreviation" -->
 category: info
 
@@ -30,27 +30,27 @@ docname: draft-pham-additional-wire-formats-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
-consensus: true
+consensus: false
 v: 3
 area: AREA
 workgroup: WG Working Group
 keyword:
- - next generation
- - unicorn
- - sparkling distributed ledger
+ - additional authenticated data
+ - AAD
+ - Wire formats
 venue:
-  group: WG
+  group: mls
   type: Working Group
-  mail: WG@example.com
-  arch: https://example.com/WG
-  github: USER/REPO
+  mail: mls@ietf.org
+  arch: https://mailarchive.ietf.org/arch/browse/mls/
+  github: anhph0/mls-additional-wire-formats
   latest: https://example.com/LATEST
 
 author:
  -
-    fullname: Your Name Here
-    organization: Your Organization Here
-    email: your.email@example.com
+    fullname: Anh Pham
+    organization: Google
+    email: anhph@google.com
 
 normative:
 
@@ -68,13 +68,9 @@ Sometimes it is desirable to have additional authenticated data to be included i
 
 An example of this is the case of delivery receipts where the server needs to know that a message from Alice has been delivered to Bob, but at the same time it wants Alice to be able to verify that the delivery receipt indeed comes from Bob.
 
-This document proposes an extension to support new wire formats for MLS `PrivateMessage` and `PublicMessage` to support such cases. Applications will inject additional data as part of the `MLSMessage` computation, but the additional data is not included in the wire format of the `MLSMessage`. 
+This document proposes an extension to support new wire formats for MLS `PrivateMessage` and `PublicMessage` to support such cases. Applications will inject additional data as part of the `MLSMessage` computation, but the additional data is not included in the `MLSMessage`. 
 
 Note that it is the application's responsibility to know what needs to be used as additional data when it processes messages with these new wire formats. 
-
-<!-- TODO: A cautionary paragraph
-
--->
 
 # Extension Definition
 ```
@@ -83,8 +79,16 @@ Note that it is the application's responsibility to know what needs to be used a
      opaque extension_data<V>;
    } ExtensionContent;
 ```
+`extension_type` ExtensionType is a unique uint16 identifier registered in MLS Extension Types IANA registry (see Section 17.3 of [RFC9420]). This extension uses the `mls_extension_message` WireFormat as defined in [Extensions draft, Section 2.1.7.1], where the `extension_data` is TLS-serialized `MessageWithoutAAD`. 
 
-Where `extension_type` ExtensionType is a unique uint16 identifier registered in MLS Extension Types IANA registry (see Section 17.3 of [RFC9420]) and `extension_data` is set to an empty vector.
+```
+enum {
+    PublicMessageWithoutAAD(0),
+    PrivateMessageWithoutAAD(1),
+} MessageWithoutAAD;
+```
+
+
 
 # Message Framing
 ```
@@ -197,7 +201,7 @@ The actual message content is encrypted using the key derived as follows:
 DeriveExtensionSecret(Secret, Label) =
   ExpandWithLabel(epoch_secret, "ExtensionExport " + ExtensionType + " " + Label)
 ```
-as defined by in Section 2.1.5 of the Extension Framework.
+as defined in Section 2.1.5 of the Extension Framework.
 
 - Use the the `secret` in lieu of `encryption_tree` to seed the Secret Tree (Section 9 of RFC 9420). 
 - Follow the procedure of the Secret Tree to generate encryption keys and nonces for the encryption of the message content.
