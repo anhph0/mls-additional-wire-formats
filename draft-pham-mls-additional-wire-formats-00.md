@@ -23,7 +23,7 @@ title: "MLS Wire Formats for PublicMessage and PrivateMessage without authentica
 abbrev: "Wire formats without authenticated_data"
 category: info
 
-docname: draft-pham-additional-wire-formats-latest
+docname: draft-pham-mls-additional-wire-formats-00
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
