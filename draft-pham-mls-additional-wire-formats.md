@@ -52,6 +52,14 @@ author:
     organization: Google
     email: anhph@google.com
 
+- fullname: Marta Mularczyk
+    organization: Amazon
+    email: mulmarta@amazon.com
+
+- fullname: Raphael Robert
+    organization: Phoenix R&D
+    email: ietf@raphaelrobert.com
+
 normative:
 
 informative:
@@ -79,7 +87,7 @@ Note that it is the application's responsibility to know what needs to be used a
      opaque extension_data<V>;
    } ExtensionContent;
 ```
-`extension_type` ExtensionType is a unique uint16 identifier registered in MLS Extension Types IANA registry (see Section 17.3 of [RFC9420]). This extension uses the `mls_extension_message` WireFormat as defined in [Extensions draft, Section 2.1.7.1], where the `extension_data` is TLS-serialized `MessageWithoutAAD`. 
+`extension_type` ExtensionType is a unique uint16 identifier registered in MLS Extension Types IANA registry (see Section 17.3 of [RFC9420]). This extension uses the `mls_extension_message` WireFormat as defined in [Section 2.1.7.1 of the Extensions draft](https://messaginglayersecurity.rocks/mls-extensions/draft-ietf-mls-extensions.html#wire-formats), where the `extension_data` is TLS-serialized `MessageWithoutAAD`. 
 
 ```
 enum {
