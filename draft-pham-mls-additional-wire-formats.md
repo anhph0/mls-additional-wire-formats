@@ -1,6 +1,5 @@
 
 ---
-<!--
 ###
 # Internet-Draft Markdown Template
 #
@@ -21,9 +20,8 @@
 # Change the file extension to match the format (.xml for XML, etc...)
 #
 ###
--->
 title: "MLS Wire Formats for PublicMessage and PrivateMessage without authenticated_data"
-<!--- abbrev: "TODO - Abbreviation" -->
+abbrev: "Wire formats without authenticated_data"
 category: info
 
 docname: draft-pham-additional-wire-formats-latest
@@ -52,11 +50,13 @@ author:
     organization: Google
     email: anhph@google.com
 
-- fullname: Marta Mularczyk
+- 
+    fullname: Marta Mularczyk
     organization: Amazon
     email: mulmarta@amazon.com
 
-- fullname: Raphael Robert
+- 
+    fullname: Raphael Robert
     organization: Phoenix R&D
     email: ietf@raphaelrobert.com
 
@@ -66,12 +66,13 @@ informative:
 
 
 --- abstract
-
 This document describes an extension to support two new wire formats for MLS messages: PublicMessageWithoutAAD and PrivateMessageWithoutAAD.
+
 
 --- middle
 
 # Introduction
+
 Sometimes it is desirable to have additional authenticated data to be included in the computation of `MLSMessage` constructions, but not to have it sent on the wire as part of these messages. A use-case is applications that want to have some information available to the server together with a `MLSMessage` and at the same time want to prove the authenticity of the information to other clients. 
 
 An example of this is the case of delivery receipts where the server needs to know that a message from Alice has been delivered to Bob, but at the same time it wants Alice to be able to verify that the delivery receipt indeed comes from Bob.
@@ -79,6 +80,7 @@ An example of this is the case of delivery receipts where the server needs to kn
 This document proposes an extension to support new wire formats for MLS `PrivateMessage` and `PublicMessage` to support such cases. Applications will inject additional data as part of the `MLSMessage` computation, but the additional data is not included in the `MLSMessage`. 
 
 Note that it is the application's responsibility to know what needs to be used as additional data when it processes messages with these new wire formats. 
+
 
 # Extension Definition
 ```
@@ -95,7 +97,6 @@ enum {
     PrivateMessageWithoutAAD(1),
 } MessageWithoutAAD;
 ```
-
 
 
 # Message Framing
@@ -120,29 +121,9 @@ struct {
 
 ```
 
+
 # Content Authentication
 `FramedContentWithoutAAD` is authenticated using the same procedure for `FramedContent` described in Section 6.1 of [RFC9420]. A difference is that in the `FramedContentTBS` definition, we have `FramedContent` with `authenticated_data` being injected from the outside by the application.
-
-<!--
-A difference is that in the `FramedContentTBS` definition, we have `FramedContentWithoutAAD` in lieu of `FramedContent`. 
-
-```
-struct {
-    ProtocolVersion version = mls10;
-    WireFormat wire_format;
-    FramedContentWithoutAAD content;
-    select (FramedContentTBS.content.sender.sender_type) {
-        case member:
-        case new_member_commit:
-            GroupContext context;
-        case external:
-        case new_member_proposal:
-            struct{};
-    };
-} FramedContentWithoutAadTBS;
-
-```
--->
 
 Moreover, the `signature` in the `FramedContentAuthData` is computed by using SafeExtension. 
 
@@ -158,6 +139,7 @@ extension_data = FramedContent
 with `authenticated_data` being injected to `FramedContent` by the application.
 
 <!-- with `AdditionalData` being supplied by the application. -->
+
 
 # PublicMessageWithoutAAD
 
@@ -185,6 +167,7 @@ membership_tag = MAC(membership_key, AuthenticatedContentTBM)
 with `AuthenticatedContentTBM` and `membership_key` as defined as in the [RFC9420]. `authenticated_data` in the `FramedContent` is injected by the application.
 
 <!-- Q: do we need to have an extension label for `membership_key`? -->
+
 
 # PrivateMessageWithoutAAD
 ```
@@ -214,11 +197,10 @@ as defined in Section 2.1.5 of the Extension Framework.
 - Use the the `secret` in lieu of `encryption_tree` to seed the Secret Tree (Section 9 of RFC 9420). 
 - Follow the procedure of the Secret Tree to generate encryption keys and nonces for the encryption of the message content.
 
-<!--
 # Conventions and Definitions
 
 #{::boilerplate bcp14-tagged}
--->
+
 
 # Security Considerations
 
@@ -228,6 +210,7 @@ No implications on the security of the base MLS protocol due to the use of SafeE
 # IANA Considerations
 
 This document requests the addition of various new values under the heading of "Messaging Layer Security".
+
 
 --- back
 
