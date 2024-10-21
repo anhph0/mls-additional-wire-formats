@@ -1,4 +1,3 @@
-
 ---
 ###
 # Internet-Draft Markdown Template
@@ -50,12 +49,12 @@ author:
     organization: Google
     email: anhph@google.com
 
-- 
+ - 
     fullname: Marta Mularczyk
     organization: Amazon
     email: mulmarta@amazon.com
 
-- 
+ - 
     fullname: Raphael Robert
     organization: Phoenix R&D
     email: ietf@raphaelrobert.com
@@ -66,8 +65,8 @@ informative:
 
 
 --- abstract
-This document describes an extension to support two new wire formats for MLS messages: PublicMessageWithoutAAD and PrivateMessageWithoutAAD.
 
+This document describes an extension to support two new wire formats for MLS messages: PublicMessageWithoutAAD and PrivateMessageWithoutAAD.
 
 --- middle
 
@@ -79,47 +78,45 @@ An example of this is the case of delivery receipts where the server needs to kn
 
 This document proposes an extension to support new wire formats for MLS `PrivateMessage` and `PublicMessage` to support such cases. Applications will inject additional data as part of the `MLSMessage` computation, but the additional data is not included in the `MLSMessage`. 
 
-Note that it is the application's responsibility to know what needs to be used as additional data when it processes messages with these new wire formats. 
+Note that it is the application's responsibility to know what needs to be used as additional data when it processes messages with these new wire formats.
 
 
 # Extension Definition
-```
- struct {
-     ExtensionType extension_type;
-     opaque extension_data<V>;
-   } ExtensionContent;
-```
+
+    struct {
+        ExtensionType extension_type;
+        opaque extension_data<V>;
+    } ExtensionContent;
+
+
+
 `extension_type` ExtensionType is a unique uint16 identifier registered in MLS Extension Types IANA registry (see Section 17.3 of [RFC9420]). This extension uses the `mls_extension_message` WireFormat as defined in [Section 2.1.7.1 of the Extensions draft](https://messaginglayersecurity.rocks/mls-extensions/draft-ietf-mls-extensions.html#wire-formats), where the `extension_data` is TLS-serialized `MessageWithoutAAD`. 
 
-```
-enum {
-    PublicMessageWithoutAAD(0),
-    PrivateMessageWithoutAAD(1),
-} MessageWithoutAAD;
-```
 
+    enum {
+        PublicMessageWithoutAAD(0),
+        PrivateMessageWithoutAAD(1),
+    } MessageWithoutAAD;
 
 # Message Framing
-```
-uint16 WireFormat;
 
-struct {
-    opaque group_id<V>;
-    uint64 epoch;
-    Sender sender;
+    uint16 WireFormat;
 
-    ContentType content_type;
-    select (FramedContent.content_type) {
-        case application:
-          opaque application_data<V>;
-        case proposal:
-          Proposal proposal;
-        case commit:
-          Commit commit;
-    };
-} FramedContentWithoutAAD;
+    struct {
+        opaque group_id<V>;
+        uint64 epoch;
+        Sender sender;
 
-```
+        ContentType content_type;
+            select (FramedContent.content_type) {
+                case application:
+                    opaque application_data<V>;
+                case proposal:
+                    Proposal proposal;
+                case commit:
+                    Commit commit;
+            };
+    } FramedContentWithoutAAD;
 
 
 # Content Authentication
@@ -127,58 +124,50 @@ struct {
 
 Moreover, the `signature` in the `FramedContentAuthData` is computed by using SafeExtension. 
 
-```
-SignWithLabel(SignatureKey, "LabeledExtensionContent", LabeledExtensionContent)
-```
-where `LabeledExtensionContent` is defined as:
-```
-label = Label
-extension_type = ExtensionType
-extension_data = FramedContent
-```
-with `authenticated_data` being injected to `FramedContent` by the application.
+    SignWithLabel(SignatureKey, "LabeledExtensionContent", LabeledExtensionContent)
 
-<!-- with `AdditionalData` being supplied by the application. -->
+where `LabeledExtensionContent` is defined as:
+
+    label = Label
+    extension_type = ExtensionType
+    extension_data = FramedContent
+
+with `authenticated_data` being injected to `FramedContent` by the application.
 
 
 # PublicMessageWithoutAAD
 
-```
-struct {
-    FramedContentWithoutAAD content;
-    FramedContentAuthData auth;
-    select (PublicMessageWithoutAAD.content.sender.sender_type) {
-        case member:
-            MAC membership_tag;
-        case external:
-        case new_member_commit:
-        case new_member_proposal:
-            struct{};
-    };
-} PublicMessageWithoutAAD;
-```
+
+    struct {
+        FramedContentWithoutAAD content;
+        FramedContentAuthData auth;
+        select (PublicMessageWithoutAAD.content.sender.sender_type) {
+            case member:
+                MAC membership_tag;
+            case external:
+            case new_member_commit:
+            case new_member_proposal:
+                struct{};
+        };
+    } PublicMessageWithoutAAD;
 
 The membership_tag in the `PublicMessageWithoutAAD` authenticates the sender's membership in the group. It is computed as follows:
 
-```
-membership_tag = MAC(membership_key, AuthenticatedContentTBM)
-```
+
+    membership_tag = MAC(membership_key, AuthenticatedContentTBM)
 
 with `AuthenticatedContentTBM` and `membership_key` as defined as in the [RFC9420]. `authenticated_data` in the `FramedContent` is injected by the application.
 
-<!-- Q: do we need to have an extension label for `membership_key`? -->
-
 
 # PrivateMessageWithoutAAD
-```
-struct {
-    opaque group_id<V>;
-    uint64 epoch;
-    ContentType content_type;
-    opaque encrypted_sender_data<V>;
-    opaque ciphertext<V>;
-} PrivateMessageWithoutAAD;
-```
+
+    struct {
+        opaque group_id<V>;
+        uint64 epoch;
+        ContentType content_type;
+        opaque encrypted_sender_data<V>;
+        opaque ciphertext<V>;
+    } PrivateMessageWithoutAAD;
 
 Similar to `PrivateMessage`, `encrypted_sender_data` and `ciphertext` are encrypted using the AEAD function specified by the cipher suite in use, using the `SenderData` and `PrivateMessageContent` structures as input. 
 
@@ -186,20 +175,21 @@ The `SenderData` is encrypted using the `sender_data_secret` of the group.
 
 The actual message content is encrypted using the key derived as follows:
 
-- Derive a `secret` using
+- Derive a `secret` using:
 
-```
-DeriveExtensionSecret(Secret, Label) =
-  ExpandWithLabel(epoch_secret, "ExtensionExport " + ExtensionType + " " + Label)
-```
+    ```
+    DeriveExtensionSecret(Secret, Label) = ExpandWithLabel(epoch_secret, "ExtensionExport " + ExtensionType + " " + Label)
+    ```
+
 as defined in Section 2.1.5 of the Extension Framework.
 
 - Use the the `secret` in lieu of `encryption_tree` to seed the Secret Tree (Section 9 of RFC 9420). 
 - Follow the procedure of the Secret Tree to generate encryption keys and nonces for the encryption of the message content.
 
+
 # Conventions and Definitions
 
-#{::boilerplate bcp14-tagged}
+{::boilerplate bcp14-tagged}
 
 
 # Security Considerations
@@ -215,7 +205,6 @@ This document requests the addition of various new values under the heading of "
 --- back
 
 # Acknowledgments
-#{:numbered="false"}
+{:numbered="false"}
 
-#TODO acknowledge.
-
+TODO acknowledge.
